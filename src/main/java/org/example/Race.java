@@ -5,11 +5,14 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.List;
 
+import static org.example.Main.startRace;
+import static org.example.Main.waitFinishRace;
+
 @Log4j2
 public class Race {
 
     @Getter
-    private long distance;
+    private final long distance;
 
     private List<F1Cars> participantCars = new java.util.ArrayList<>();
 
@@ -26,10 +29,20 @@ public class Race {
     public void start() {
         for (Team team : teams) {
             team.prepareRace(this);
+
+            for (F1Cars car : team.getCars()) {
+                register(car);
+            }
         }
+
         //TODO даем команду на старт гонки
+        log.info("На старт.");
+        log.info("Внимание.");
+        log.info("МАРШ!!!");
+        startRace();
 
         //TODO блокируем поток до завершения гонки
+        waitFinishRace();
     }
 
 
@@ -41,19 +54,20 @@ public class Race {
 
     public void start(F1Cars f1Cars) {
         //фиксация времени старта
+        f1Cars.setTime(System.nanoTime());
     }
 
     public long finish(F1Cars participant) {
         //фиксация времени финиша
-        return 0; //длительность гонки у данного участника
+        return System.nanoTime() - participant.getTime(); //длительность гонки у данного участника
     }
 
     public void printResults() {
         participantCars.sort(F1Cars::compareTo);
         log.info("Результат гонки:");
-        int position = 0;
+        int position = 1;
         for (F1Cars participant : participantCars) {
-            log.info("Позиция: {} время: {}", position++, participant.getName());
+            log.info("Позиция: {}, Имя: {}, время {}", position++, participant.getName(), participant.getTime());
         }
     }
 }

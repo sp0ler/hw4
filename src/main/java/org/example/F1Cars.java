@@ -1,12 +1,19 @@
 package org.example;
 
 import lombok.Getter;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Random;
+
+import static org.example.Main.finishRace;
+import static org.example.Main.waitStartRace;
 
 /**
  * Поток болида
  */
+@Log4j2
 public class F1Cars extends Thread implements Comparable<F1Cars> {
 
     /**
@@ -48,6 +55,7 @@ public class F1Cars extends Thread implements Comparable<F1Cars> {
      * Время гонки, заполняется на финише
      */
     @Getter
+    @Setter
     private long time = 0;
 
     public F1Cars(long carId, PitStop pitStop) {
@@ -56,6 +64,9 @@ public class F1Cars extends Thread implements Comparable<F1Cars> {
         this.pitStop = pitStop;
         random = new Random();
 
+        for (int i = 0; i < wheels.length; i++) {
+            wheels[i] = new Wheel();
+        }
     }
 
     /**
@@ -76,14 +87,17 @@ public class F1Cars extends Thread implements Comparable<F1Cars> {
      * финишируем и заверщаем работу
      */
     @Override
+    @SneakyThrows
     public void run() {
         // TODO дожидаемся старта гонки
+        waitStartRace();
+
         race.start(this);
         while (currentDistance < targetDistance) {
             moveToTarget();
         }
         this.time = race.finish(this);
-
+        finishRace();
     }
 
     /**
@@ -93,7 +107,9 @@ public class F1Cars extends Thread implements Comparable<F1Cars> {
      */
     private void moveToTarget() {
         if (isNeedPit()) {
+            log.info("Машина {} нуждается в замене колёс.", this.getName());
             pitStop.pitline(this);
+            log.info("Машина {} закончила замену колёс.", this.getName());
         }
         long speed = getNextSpeed();
 
